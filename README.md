@@ -69,6 +69,8 @@ What it does:
 - writes optimized runtime config to `infra/runtime.env`
 - starts containers from `infra/docker-compose.runtime.yml`
 - in local mode, auto-pulls the best available Ollama model from a tiered model pool
+- configures smart routing tiers: `LOCAL_MODEL_FAST`, `LOCAL_MODEL_BALANCED`, `LOCAL_MODEL_QUALITY`
+- enables API-side quality/speed features: complexity routing + response cache
 
 Container endpoints after setup:
 
@@ -81,6 +83,14 @@ Local model pools used by `setup`:
 - low machines: `qwen2.5:1.5b`, `phi3:mini`, `llama3.2:1b`
 - mid machines: `qwen2.5:3b`, `llama3.2:3b`, `gemma2:2b`
 - high machines: `qwen2.5:7b`, `llama3.1:8b`, `gemma2:9b`
+
+Local optimization strategy:
+
+- low machine: pull 1 model (fast tier only)
+- mid machine: pull 2 models (fast + balanced)
+- high machine: pull 3 models (fast + balanced + quality)
+- runtime router chooses tier by prompt complexity and stays local by default
+- cloud escalation is optional (`CLOUD_ESCALATION=true`) for very hard prompts
 
 ## Runtime settings
 
