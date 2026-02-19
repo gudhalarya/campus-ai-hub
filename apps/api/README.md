@@ -1,6 +1,7 @@
-# API Service Blueprint
+# API Service
 
-Use this service as the runtime router between local and cloud providers.
+This folder now contains a lightweight runtime router (`server.js`) for hackathon use.
+It supports local and cloud chat paths with zero external npm dependencies.
 
 ## Required endpoints
 
@@ -14,6 +15,20 @@ Use this service as the runtime router between local and cloud providers.
 - `MODE=local`: route `/api/chat` to local model runtime (Ollama/vLLM/llama.cpp)
 - `MODE=cloud`: route `/api/chat` to hosted API with provided key/model
 - Keep utility and report endpoints local so campus workflows stay deterministic
+
+## Run in container
+
+Use:
+
+```bash
+./setup
+```
+
+or:
+
+```bash
+docker compose -f infra/docker-compose.runtime.yml --profile local up -d --build
+```
 
 ## Security
 

@@ -42,6 +42,39 @@ npm run dev
 
 Vite will print a local URL (typically `http://localhost:8080`).
 
+## Auto setup for low-end machines
+
+Use the `setup` script to auto-detect machine resources, choose local vs cloud mode, tune runtime values, and start containers.
+
+```bash
+./setup
+```
+
+Useful modes:
+
+```bash
+./setup --auto      # detect + choose best mode (default)
+./setup --local     # force offline/local mode
+./setup --cloud     # force cloud mode
+./setup --no-start  # only generate infra/runtime.env
+```
+
+What it does:
+
+- detects CPU cores, RAM, and architecture
+- classifies machine as `extreme`, `low`, `mid`, or `high`
+- auto-selects mode:
+  - `extreme` -> cloud mode
+  - otherwise -> local mode
+- writes optimized runtime config to `infra/runtime.env`
+- starts containers from `infra/docker-compose.runtime.yml`
+
+Container endpoints after setup:
+
+- Web: `http://localhost:8080`
+- API health: `http://localhost:8000/health`
+- Local model runtime (local mode): `http://localhost:11434`
+
 ## Runtime settings
 
 Open `/runtime-settings` in the app to configure runtime behavior.
