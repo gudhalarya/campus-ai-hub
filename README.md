@@ -1,73 +1,79 @@
-# Welcome to your Lovable project
+# Campus AI Hub
 
-## Project info
+Campus AI Hub is a local-first web app for student-friendly AI access on a campus network.
+It includes:
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+- A chat workspace with streaming responses
+- A utility builder for template-based content generation
+- A responsible AI dashboard for transparency and bias indicators
 
-## How can I edit this code?
+## Why this project exists
 
-There are several ways of editing your application.
+The goal is simple: make AI tools available in a controlled, private environment.
+The frontend is built to connect to a local backend running on your network.
 
-**Use Lovable**
+## Quick start
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### 1) Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 18+ (Node.js 20+ recommended)
+- npm
 
-**Use your preferred IDE**
+### 2) Install dependencies
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 3) Run the app
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Vite will print a local URL (typically `http://localhost:8080`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Scripts
 
-**Use GitHub Codespaces**
+- `npm run dev` - start local development server
+- `npm run build` - build production assets
+- `npm run preview` - preview the production build locally
+- `npm run lint` - run ESLint
+- `npm run test` - run Vitest once
+- `npm run test:watch` - run Vitest in watch mode
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## App routes
 
-## What technologies are used for this project?
+- `/` - landing page
+- `/workspace` - AI chat workspace (streaming response UI)
+- `/utility-builder` - template-driven utility generation
+- `/responsible-ai` - model report and safety metrics
 
-This project is built with:
+## Backend API expectation
 
+By default, the frontend calls:
+
+- Base URL: `http://localhost:8000/api`
+
+Expected endpoints:
+
+- `POST /chat` (streaming text response)
+- `POST /utility/generate` (returns generated utility output)
+- `GET /ai/report` (returns responsible AI metrics)
+
+If your backend runs elsewhere, update `API_BASE` in `src/lib/api.ts`.
+
+## Tech stack
+
+- React + TypeScript
 - Vite
-- TypeScript
-- React
-- shadcn-ui
 - Tailwind CSS
+- shadcn/ui components
+- TanStack Query
+- Vitest + Testing Library
 
-## How can I deploy this project?
+## Troubleshooting
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- If you see network errors in the UI, confirm the backend is running at `localhost:8000`.
+- If port `8080` is busy, Vite may prompt for another port.
+- If styles or assets look stale, stop the dev server and rerun `npm run dev`.
