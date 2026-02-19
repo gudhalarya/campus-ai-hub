@@ -56,6 +56,22 @@ This command:
 - Ready: `http://localhost:8000/ready`
 - Metrics: `http://localhost:8000/metrics`
 
+## Friendly Interactive Guide
+
+If you want a fun terminal walkthrough for teammates/demo judges, run:
+
+```bash
+./guide
+```
+
+What `guide` helps with:
+
+- visual overview of system architecture
+- one-click setup mode selection
+- health/readiness/metrics checks
+- sample streaming chat API test
+- quick access to docs and final runbook
+
 ## Setup Modes
 
 ```bash

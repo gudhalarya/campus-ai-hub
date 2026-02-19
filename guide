@@ -1,0 +1,228 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+C_RESET='\033[0m'
+C_BOLD='\033[1m'
+C_DIM='\033[2m'
+C_CYAN='\033[36m'
+C_GREEN='\033[32m'
+C_YELLOW='\033[33m'
+C_MAGENTA='\033[35m'
+C_BLUE='\033[34m'
+C_RED='\033[31m'
+
+print_header() {
+  clear
+  printf "%b\n" "${C_BOLD}${C_CYAN}"
+  echo "  AetherCampus :: Interactive Guide"
+  echo "  Local-First AI Setup + Runtime Tour"
+  printf "%b\n" "${C_RESET}${C_DIM}Interactive Local-First AI Guide${C_RESET}"
+  echo
+}
+
+pause() {
+  echo
+  read -r -p "Press Enter to continue... " _
+}
+
+spinner() {
+  local msg="$1"
+  local frames='|/-\\'
+  printf "%b" "${C_DIM}${msg}${C_RESET} "
+  for _ in $(seq 1 18); do
+    for ((i=0; i<${#frames}; i++)); do
+      printf "\r%b %s" "${C_DIM}${msg}${C_RESET}" "${frames:i:1}"
+      sleep 0.03
+    done
+  done
+  printf "\r%b %s\n" "${C_GREEN}${msg}${C_RESET}" "done"
+}
+
+show_overview() {
+  print_header
+  echo "${C_BOLD}How AetherCampus Works${C_RESET}"
+  echo
+  echo "${C_BLUE}1) Setup & Detection${C_RESET}"
+  echo "   ./setup detects CPU + RAM and chooses local/cloud mode."
+  echo
+  echo "${C_BLUE}2) Local Model Strategy${C_RESET}"
+  echo "   It pulls model tier(s): fast -> balanced -> quality."
+  echo
+  echo "${C_BLUE}3) Rust Backend (Actix)${C_RESET}"
+  echo "   /api/chat streams responses and routes by prompt complexity."
+  echo
+  echo "${C_BLUE}4) Frontend${C_RESET}"
+  echo "   Vite app connects to backend at localhost:8000/api."
+  echo
+  echo "${C_BLUE}5) Health + Ops${C_RESET}"
+  echo "   /health, /ready, /metrics to monitor system status."
+  echo
+  spinner "Loading architecture map"
+  echo
+  echo "${C_MAGENTA}User -> Frontend (8080) -> Rust API (8000) -> Ollama (11434)${C_RESET}"
+  echo "                                     \\-> Cloud API (optional)"
+  pause
+}
+
+run_setup_now() {
+  print_header
+  echo "${C_BOLD}Run setup now${C_RESET}"
+  echo
+  echo "Choose mode:"
+  echo "  1) Auto (recommended)"
+  echo "  2) Local only"
+  echo "  3) Cloud only"
+  echo "  4) Dry run (no-start)"
+  echo
+  read -r -p "Enter choice [1-4]: " c
+
+  case "$c" in
+    1) cmd=("$ROOT_DIR/setup" --auto) ;;
+    2) cmd=("$ROOT_DIR/setup" --local) ;;
+    3) cmd=("$ROOT_DIR/setup" --cloud) ;;
+    4) cmd=("$ROOT_DIR/setup" --no-start) ;;
+    *)
+      echo "Invalid choice."
+      pause
+      return
+      ;;
+  esac
+
+  echo
+  printf "%b\n" "${C_YELLOW}Running: ${cmd[*]}${C_RESET}"
+  echo
+  "${cmd[@]}"
+  pause
+}
+
+check_status() {
+  print_header
+  echo "${C_BOLD}Service Status${C_RESET}"
+  echo
+
+  if command -v docker >/dev/null 2>&1; then
+    echo "${C_CYAN}Container snapshot:${C_RESET}"
+    docker compose -f "$ROOT_DIR/infra/docker-compose.runtime.yml" ps || true
+    echo
+  else
+    echo "${C_YELLOW}Docker not found in PATH${C_RESET}"
+    echo
+  fi
+
+  if command -v curl >/dev/null 2>&1; then
+    echo "${C_CYAN}HTTP checks:${C_RESET}"
+    for u in \
+      "http://localhost:8000/health" \
+      "http://localhost:8000/ready" \
+      "http://localhost:8000/metrics" \
+      "http://localhost:8080"; do
+      if curl -fsS "$u" >/dev/null; then
+        echo "  ${C_GREEN}OK${C_RESET}  $u"
+      else
+        echo "  ${C_RED}FAIL${C_RESET} $u"
+      fi
+    done
+  else
+    echo "curl not found; skipping endpoint checks."
+  fi
+
+  pause
+}
+
+sample_chat_test() {
+  print_header
+  echo "${C_BOLD}Quick Chat API Test${C_RESET}"
+  echo
+
+  if ! command -v curl >/dev/null 2>&1; then
+    echo "curl is required for this test."
+    pause
+    return
+  fi
+
+  payload='{"messages":[{"role":"user","content":"Give me 3 quick productivity tips for students."}]}'
+
+  echo "Sending sample request to /api/chat..."
+  echo
+  curl -N -sS -H 'Content-Type: application/json' \
+    -d "$payload" \
+    http://localhost:8000/api/chat || true
+
+  echo
+  echo
+  echo "${C_DIM}If you see streamed text above, chat pipeline is healthy.${C_RESET}"
+  pause
+}
+
+open_docs() {
+  print_header
+  echo "${C_BOLD}Guide Documents${C_RESET}"
+  echo
+  echo "1) README.md"
+  echo "2) docs/FINAL_RUNBOOK.md"
+  echo "3) docs/FINAL_RUNBOOK.html"
+  echo
+  read -r -p "Choose file [1-3]: " c
+
+  case "$c" in
+    1) file="$ROOT_DIR/README.md" ;;
+    2) file="$ROOT_DIR/docs/FINAL_RUNBOOK.md" ;;
+    3) file="$ROOT_DIR/docs/FINAL_RUNBOOK.html" ;;
+    *)
+      echo "Invalid choice."
+      pause
+      return
+      ;;
+  esac
+
+  echo
+  echo "Path: $file"
+
+  if command -v xdg-open >/dev/null 2>&1; then
+    read -r -p "Open it now? [y/N]: " yn
+    if [[ "$yn" =~ ^[Yy]$ ]]; then
+      xdg-open "$file" >/dev/null 2>&1 || true
+      echo "Opened."
+    fi
+  fi
+
+  pause
+}
+
+main_menu() {
+  while true; do
+    print_header
+    echo "${C_BOLD}What do you want to do?${C_RESET}"
+    echo
+    echo "  1) See how the system works"
+    echo "  2) Run setup"
+    echo "  3) Check system status"
+    echo "  4) Run sample chat test"
+    echo "  5) Open docs/runbook"
+    echo "  6) Exit"
+    echo
+    read -r -p "Enter choice [1-6]: " choice
+
+    case "$choice" in
+      1) show_overview ;;
+      2) run_setup_now ;;
+      3) check_status ;;
+      4) sample_chat_test ;;
+      5) open_docs ;;
+      6)
+        print_header
+        echo "${C_GREEN}You are ready to ship. See you at demo time.${C_RESET}"
+        echo
+        exit 0
+        ;;
+      *)
+        echo "Invalid choice."
+        sleep 0.8
+        ;;
+    esac
+  done
+}
+
+main_menu
