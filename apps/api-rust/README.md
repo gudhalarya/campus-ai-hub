@@ -9,13 +9,16 @@ This is the production backend scaffold for AetherCampus.
 - `POST /api/utility/generate`
 - `GET /api/ai/report`
 - `GET /health`
+- `GET /ready`
+- `GET /metrics`
 
 ## Runtime model strategy
 
 - local-first model routing (`fast`, `balanced`, `quality`)
 - prompt complexity scoring to choose tier
 - optional cloud escalation for very complex prompts
-- response cache for repeat prompt latency reduction
+- response cache with TTL for repeat prompt latency reduction
+- upstream timeout guard for stability under load
 
 ## Run with containers
 

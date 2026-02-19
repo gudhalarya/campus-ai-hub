@@ -71,11 +71,14 @@ What it does:
 - in local mode, auto-pulls the best available Ollama model from a tiered model pool
 - configures smart routing tiers: `LOCAL_MODEL_FAST`, `LOCAL_MODEL_BALANCED`, `LOCAL_MODEL_QUALITY`
 - enables API-side quality/speed features: complexity routing + response cache
+- runs a Rust Actix backend with health/readiness/metrics endpoints
 
 Container endpoints after setup:
 
 - Web: `http://localhost:8080`
 - API health: `http://localhost:8000/health`
+- API readiness: `http://localhost:8000/ready`
+- API metrics: `http://localhost:8000/metrics`
 - Local model runtime (local mode): `http://localhost:11434`
 
 Local model pools used by `setup`:
