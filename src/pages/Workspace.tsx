@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Send, Loader2, Copy, Check } from "lucide-react";
+import { Send, Loader2, Copy, Check, Sparkles } from "lucide-react";
 import { apiStream } from "@/lib/api";
 
 interface Message {
@@ -15,11 +15,11 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <div className="rounded-lg border border-border bg-secondary overflow-hidden my-3">
+    <div className="rounded-lg border border-border bg-secondary overflow-hidden my-3 animate-scale-in">
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
         <span className="text-xs font-mono text-muted-foreground">{lang || "code"}</span>
-        <button onClick={copy} className="text-muted-foreground hover:text-foreground transition-colors">
-          {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+        <button onClick={copy} className="text-muted-foreground hover:text-foreground transition-colors duration-200">
+          {copied ? <Check className="w-3.5 h-3.5 text-primary" /> : <Copy className="w-3.5 h-3.5" />}
         </button>
       </div>
       <pre className="p-4 overflow-x-auto text-sm font-mono">
@@ -56,6 +56,54 @@ function renderMarkdown(text: string) {
   }
 
   return parts;
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-3">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="w-2 h-2 rounded-full bg-primary animate-typing-dot"
+          style={{ animationDelay: `${i * 0.2}s` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function EmptyState() {
+  const suggestions = [
+    "Explain quantum computing simply",
+    "Help me write a Python function",
+    "Summarize a research paper",
+    "Generate a study plan",
+  ];
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+      <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 animate-float">
+        <Sparkles className="w-8 h-8 text-primary" />
+      </div>
+      <h2 className="text-xl font-semibold mb-2 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+        Campus AI Workspace
+      </h2>
+      <p className="text-sm text-muted-foreground max-w-md mb-8 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        Start a conversation with the locally hosted AI model. Your data stays on-campus.
+      </p>
+      <div className="grid grid-cols-2 gap-2 max-w-sm w-full">
+        {suggestions.map((s, i) => (
+          <div
+            key={s}
+            className="text-xs text-muted-foreground border border-border rounded-lg px-3 py-2.5 hover:bg-secondary hover:text-foreground cursor-default transition-all duration-300 hover-scale opacity-0 animate-stagger-in"
+            style={{ animationDelay: `${0.3 + i * 0.08}s` }}
+          >
+            {s}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function Workspace() {
@@ -107,34 +155,33 @@ export default function Workspace() {
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scroll-smooth">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-              <span className="text-2xl">🧠</span>
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Campus AI Workspace</h2>
-            <p className="text-sm text-muted-foreground max-w-md">
-              Start a conversation with the locally hosted AI model. Your data stays on-campus.
-            </p>
-          </div>
+          <EmptyState />
         ) : (
-          <div className="max-w-3xl mx-auto px-6 py-6 space-y-6">
+          <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex animate-slide-up ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                style={{ animationDelay: "0.05s" }}
               >
                 <div
-                  className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed ${
+                  className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed transition-all duration-300 ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-card border border-border"
                   }`}
                 >
-                  {msg.role === "assistant" ? renderMarkdown(msg.content) : msg.content}
-                  {msg.role === "assistant" && isStreaming && i === messages.length - 1 && (
-                    <span className="inline-block w-2 h-4 bg-primary animate-pulse-glow ml-1" />
+                  {msg.role === "assistant" && msg.content === "" && isStreaming ? (
+                    <TypingIndicator />
+                  ) : msg.role === "assistant" ? (
+                    renderMarkdown(msg.content)
+                  ) : (
+                    msg.content
+                  )}
+                  {msg.role === "assistant" && isStreaming && msg.content !== "" && i === messages.length - 1 && (
+                    <span className="inline-block w-2 h-5 bg-primary animate-pulse-glow ml-1 rounded-sm" />
                   )}
                 </div>
               </div>
@@ -146,8 +193,8 @@ export default function Workspace() {
 
       {/* Error */}
       {error && (
-        <div className="px-6 py-2">
-          <div className="max-w-3xl mx-auto text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-2">
+        <div className="px-6 py-2 animate-slide-up">
+          <div className="max-w-3xl mx-auto text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-2 border border-destructive/20">
             {error}
           </div>
         </div>
@@ -167,12 +214,12 @@ export default function Workspace() {
             }}
             placeholder="Ask anything..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground"
+            className="flex-1 resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isStreaming}
-            className="p-3 rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-40"
+            className="p-3 rounded-xl bg-primary text-primary-foreground transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-40 disabled:shadow-none hover-scale"
           >
             {isStreaming ? (
               <Loader2 className="w-4 h-4 animate-spin" />
