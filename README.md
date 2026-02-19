@@ -68,12 +68,19 @@ What it does:
   - otherwise -> local mode
 - writes optimized runtime config to `infra/runtime.env`
 - starts containers from `infra/docker-compose.runtime.yml`
+- in local mode, auto-pulls the best available Ollama model from a tiered model pool
 
 Container endpoints after setup:
 
 - Web: `http://localhost:8080`
 - API health: `http://localhost:8000/health`
 - Local model runtime (local mode): `http://localhost:11434`
+
+Local model pools used by `setup`:
+
+- low machines: `qwen2.5:1.5b`, `phi3:mini`, `llama3.2:1b`
+- mid machines: `qwen2.5:3b`, `llama3.2:3b`, `gemma2:2b`
+- high machines: `qwen2.5:7b`, `llama3.1:8b`, `gemma2:9b`
 
 ## Runtime settings
 
