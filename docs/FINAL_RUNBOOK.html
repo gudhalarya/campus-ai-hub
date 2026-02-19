@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AetherCampus Final Runbook</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --primary: #0ea5e9;
+      --border: #e2e8f0;
+    }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    .wrap {
+      max-width: 900px;
+      margin: 28px auto;
+      padding: 0 20px 40px;
+    }
+    .hero {
+      background: linear-gradient(140deg, #e0f2fe, #eef2ff 50%, #f8fafc);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 20px; margin-top: 24px; }
+    p, li { color: var(--muted); }
+    .card {
+      margin-top: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      overflow: auto;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      color: #0369a1;
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin-bottom: 8px;
+    }
+    @media print {
+      body { background: #fff; }
+      .wrap { margin: 0; max-width: none; }
+      .hero, .card { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <span class="badge">AetherCampus • Final Deployment Guide</span>
+      <h1>AetherCampus Final Runbook</h1>
+      <p>Local-first AI platform with Rust backend + containerized local models and optional cloud fallback.</p>
+    </section>
+
+    <section class="card">
+      <h2>1) Quick Start</h2>
+      <pre>./setup</pre>
+      <p>This auto-detects machine specs, picks best runtime mode, pulls model tier(s), writes runtime config, and starts containers.</p>
+    </section>
+
+    <section class="card">
+      <h2>2) Access URLs</h2>
+      <ul>
+        <li>Frontend: <code>http://localhost:8080</code></li>
+        <li>Health: <code>http://localhost:8000/health</code></li>
+        <li>Ready: <code>http://localhost:8000/ready</code></li>
+        <li>Metrics: <code>http://localhost:8000/metrics</code></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>3) Setup Modes</h2>
+      <pre>./setup --auto
+./setup --local
+./setup --cloud
+./setup --no-start</pre>
+    </section>
+
+    <section class="card">
+      <h2>4) Local Model Tiers</h2>
+      <ul>
+        <li>Low: <code>qwen2.5:1.5b</code>, <code>phi3:mini</code>, <code>llama3.2:1b</code></li>
+        <li>Mid: <code>qwen2.5:3b</code>, <code>llama3.2:3b</code>, <code>gemma2:2b</code></li>
+        <li>High: <code>qwen2.5:7b</code>, <code>llama3.1:8b</code>, <code>gemma2:9b</code></li>
+      </ul>
+      <p>Runtime routing tiers: <code>LOCAL_MODEL_FAST</code>, <code>LOCAL_MODEL_BALANCED</code>, <code>LOCAL_MODEL_QUALITY</code>.</p>
+    </section>
+
+    <section class="card">
+      <h2>5) Backend Endpoints</h2>
+      <ul>
+        <li><code>POST /api/chat</code> (streaming)</li>
+        <li><code>GET /api/utility/templates</code></li>
+        <li><code>POST /api/utility/generate</code></li>
+        <li><code>GET /api/ai/report</code></li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>6) Operations</h2>
+      <pre>docker compose -f infra/docker-compose.runtime.yml logs -f
+
+docker compose -f infra/docker-compose.runtime.yml down
+docker compose -f infra/docker-compose.runtime.yml --profile local up -d --build</pre>
+    </section>
+
+    <section class="card">
+      <h2>7) PDF Export</h2>
+      <p>Open this file in a browser and use <strong>Print → Save as PDF</strong>.</p>
+    </section>
+  </div>
+</body>
+</html>
