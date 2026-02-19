@@ -81,7 +81,7 @@ function EmptyState() {
         <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
       </div>
       <h2 className="text-lg sm:text-xl font-semibold mb-2 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-        Campus AI Workspace
+        AetherCampus Workspace
       </h2>
       <p className="text-sm text-muted-foreground max-w-md opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
         Start a conversation with your connected backend model.

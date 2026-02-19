@@ -8,27 +8,34 @@ import Index from "./pages/Index";
 import Workspace from "./pages/Workspace";
 import UtilityBuilder from "./pages/UtilityBuilder";
 import ResponsibleAI from "./pages/ResponsibleAI";
+import RuntimeSettings from "./pages/RuntimeSettings";
+import AppearanceStudio from "./pages/AppearanceStudio";
 import NotFound from "./pages/NotFound";
+import { UiConfigProvider } from "@/components/UiConfigProvider";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AppLayout />}>
+    <UiConfigProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/workspace" element={<Workspace />} />
-            <Route path="/utility-builder" element={<UtilityBuilder />} />
-            <Route path="/responsible-ai" element={<ResponsibleAI />} />
-          </Route>
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+            <Route element={<AppLayout />}>
+              <Route path="/workspace" element={<Workspace />} />
+              <Route path="/utility-builder" element={<UtilityBuilder />} />
+              <Route path="/responsible-ai" element={<ResponsibleAI />} />
+              <Route path="/runtime-settings" element={<RuntimeSettings />} />
+              <Route path="/appearance" element={<AppearanceStudio />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </UiConfigProvider>
   </QueryClientProvider>
 );
 

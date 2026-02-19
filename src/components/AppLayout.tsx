@@ -10,7 +10,7 @@ export function AppLayout() {
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
         <AppHeader />
-        <main className="flex-1 overflow-auto app-main-surface">
+        <main className="flex-1 overflow-auto app-main-surface motion-safe:animate-fade-in">
           <Outlet />
         </main>
       </div>

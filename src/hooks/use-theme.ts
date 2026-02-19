@@ -1,20 +1,40 @@
 import { useEffect, useState } from "react";
+import { applyUiConfig, getUiConfig, setUiConfig } from "@/lib/ui-config";
+
+function resolveDark(): boolean {
+  const cfg = getUiConfig();
+  if (cfg.themeMode === "dark") return true;
+  if (cfg.themeMode === "light") return false;
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
 
 export function useTheme() {
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== "undefined") {
-      return document.documentElement.classList.contains("dark") ||
-        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      return resolveDark();
     }
     return true;
   });
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    const syncThemeState = () => setIsDark(resolveDark());
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+
+    window.addEventListener("ui-config-updated", syncThemeState);
+    media.addEventListener("change", syncThemeState);
+
+    return () => {
+      window.removeEventListener("ui-config-updated", syncThemeState);
+      media.removeEventListener("change", syncThemeState);
+    };
+  }, []);
+
+  useEffect(() => {
+    const cfg = getUiConfig();
+    cfg.themeMode = isDark ? "dark" : "light";
+    setUiConfig(cfg);
+    applyUiConfig(cfg);
   }, [isDark]);
 
   const toggle = () => setIsDark((prev) => !prev);

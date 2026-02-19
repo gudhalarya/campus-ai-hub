@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Sun, Moon, Menu, Bot } from "lucide-react";
+import { Sun, Moon, Menu } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
+import { getProviderConfig } from "@/lib/provider-config";
+import { useEffect, useState } from "react";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
@@ -8,11 +10,25 @@ const navItems = [
   { title: "AI Workspace", path: "/workspace" },
   { title: "Utility Builder", path: "/utility-builder" },
   { title: "Responsible AI", path: "/responsible-ai" },
+  { title: "Appearance", path: "/appearance" },
+  { title: "Runtime Settings", path: "/runtime-settings" },
 ];
 
 export function AppHeader() {
   const { isDark, toggle } = useTheme();
   const location = useLocation();
+  const [mode, setMode] = useState(getProviderConfig().mode);
+
+  useEffect(() => {
+    const updateMode = () => setMode(getProviderConfig().mode);
+    window.addEventListener("provider-config-updated", updateMode);
+    window.addEventListener("storage", updateMode);
+
+    return () => {
+      window.removeEventListener("provider-config-updated", updateMode);
+      window.removeEventListener("storage", updateMode);
+    };
+  }, []);
 
   return (
     <header className="h-14 border-b border-border bg-card/80 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 sticky top-0 z-50">
@@ -28,10 +44,8 @@ export function AppHeader() {
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[82%] max-w-[320px]">
             <div className="h-14 border-b border-border px-4 flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-                <Bot className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <SheetTitle className="text-sm">Campus AI Node</SheetTitle>
+              <img src="/aethercampus-mark.svg" alt="AetherCampus logo" className="w-7 h-7 rounded-md" />
+              <SheetTitle className="text-sm">AetherCampus</SheetTitle>
             </div>
             <nav className="p-2 space-y-1">
               {navItems.map((item) => {
@@ -54,8 +68,13 @@ export function AppHeader() {
             </nav>
           </SheetContent>
         </Sheet>
+        <Link to="/" className="hidden md:flex items-center gap-2 ml-1">
+          <img src="/aethercampus-mark.svg" alt="AetherCampus logo" className="w-6 h-6 rounded-md" />
+          <span className="text-sm font-semibold">AetherCampus</span>
+        </Link>
         <span className="text-[11px] sm:text-xs font-mono text-muted-foreground">
-          LAN • <span className="text-primary">Connected</span>
+          {mode === "local" ? "LOCAL" : "CLOUD"} •{" "}
+          <span className="text-primary">{mode === "local" ? "Connected" : "API"}</span>
         </span>
       </div>
       <button

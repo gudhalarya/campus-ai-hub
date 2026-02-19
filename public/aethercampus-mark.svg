@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AetherCampus logo mark">
+  <defs>
+    <linearGradient id="acGradient" x1="40" y1="32" x2="220" y2="230" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2DD4BF"/>
+      <stop offset="0.52" stop-color="#0EA5E9"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <radialGradient id="acGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(128 128) rotate(90) scale(112)">
+      <stop stop-color="#93C5FD" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#93C5FD" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="12" y="12" width="232" height="232" rx="64" fill="#0B1220"/>
+  <rect x="12" y="12" width="232" height="232" rx="64" fill="url(#acGlow)"/>
+
+  <path d="M128 45L196 82V174L128 211L60 174V82L128 45Z" stroke="url(#acGradient)" stroke-width="12"/>
+  <path d="M128 79L163 98V139L128 158L93 139V98L128 79Z" fill="url(#acGradient)"/>
+  <path d="M128 103L139 125L163 128L139 131L128 153L117 131L93 128L117 125L128 103Z" fill="white" fill-opacity="0.95"/>
+</svg>

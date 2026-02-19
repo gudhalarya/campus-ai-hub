@@ -4,9 +4,10 @@ import {
   MessageSquare,
   Wrench,
   Shield,
-  Bot,
   ChevronLeft,
   Home,
+  ServerCog,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,8 @@ const navItems = [
   { title: "AI Workspace", path: "/workspace", icon: MessageSquare },
   { title: "Utility Builder", path: "/utility-builder", icon: Wrench },
   { title: "Responsible AI", path: "/responsible-ai", icon: Shield },
+  { title: "Appearance", path: "/appearance", icon: Palette },
+  { title: "Runtime Settings", path: "/runtime-settings", icon: ServerCog },
 ];
 
 export function AppSidebar() {
@@ -31,16 +34,18 @@ export function AppSidebar() {
       )}
     >
       <div className="flex items-center gap-2 px-4 h-14 border-b border-border">
-        <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
-          <Bot className="w-4 h-4 text-primary-foreground" />
-        </div>
+        <img
+          src="/aethercampus-mark.svg"
+          alt="AetherCampus logo"
+          className="w-7 h-7 rounded-md flex-shrink-0 transition-transform duration-300 hover:scale-110"
+        />
         <span
           className={cn(
             "font-semibold text-sm truncate transition-all duration-300",
             collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
           )}
         >
-          Campus AI Node
+          AetherCampus
         </span>
       </div>
 

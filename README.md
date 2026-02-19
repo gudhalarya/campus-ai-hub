@@ -1,16 +1,19 @@
-# Campus AI Hub
+# AetherCampus
 
-Campus AI Hub is a local-first web app for student-friendly AI access on a campus network.
+AetherCampus is a local-first web app for student-friendly AI access on a campus network.
 It includes:
 
 - A chat workspace with streaming responses
 - A utility builder for template-based content generation
 - A responsible AI dashboard for transparency and bias indicators
+- Runtime switching between local inference and cloud API mode
 
-## Why this project exists
+## Core goal
 
-The goal is simple: make AI tools available in a controlled, private environment.
-The frontend is built to connect to a local backend running on your network.
+Build once, run anywhere:
+
+- `local mode`: full local package (server + local model runtime/container) for high-volume usage on your own hardware
+- `cloud mode`: optional hosted API usage with API key + model when you want external inference
 
 ## Quick start
 
@@ -25,13 +28,70 @@ The frontend is built to connect to a local backend running on your network.
 npm install
 ```
 
-### 3) Run the app
+### 3) Optional env setup
+
+```bash
+cp .env.example .env
+```
+
+### 4) Run the app
 
 ```bash
 npm run dev
 ```
 
 Vite will print a local URL (typically `http://localhost:8080`).
+
+## Runtime settings
+
+Open `/runtime-settings` in the app to configure runtime behavior.
+
+Configurable fields:
+
+- runtime mode: `local` or `cloud`
+- local base URL (default `http://localhost:8000/api`)
+- cloud base URL (default `https://api.openai.com/v1`)
+- cloud model (default `gpt-4.1-mini`)
+- cloud API key (saved in browser local storage)
+
+Notes:
+
+- `local mode` supports all current routes/endpoints (`/chat`, `/utility/*`, `/ai/report`).
+- `cloud mode` currently supports chat streaming from the workspace page.
+- utility builder and responsible-ai endpoints remain local-backend features.
+
+## App routes
+
+- `/` - landing page
+- `/workspace` - AI chat workspace (streaming response UI)
+- `/utility-builder` - template-driven utility generation
+- `/responsible-ai` - model report and safety metrics
+- `/appearance` - live UI customization controls
+- `/runtime-settings` - local/cloud runtime configuration
+
+## Suggested full-package architecture
+
+Use this structure to ship a complete local sandbox package with optional cloud fallback:
+
+```text
+campus-ai-hub/
+  apps/
+    web/                 # this frontend (Vite)
+    api/                 # local backend gateway
+  runtimes/
+    local-model/         # Ollama/vLLM/llama.cpp container + model volumes
+  infra/
+    docker-compose.yml   # one-command local stack
+  data/
+    models/              # local model files
+```
+
+Recommended local API behavior (`apps/api`):
+
+- `/api/chat` routes to local model runtime when mode is local
+- `/api/chat` routes to hosted provider when mode is cloud + API key
+- `/api/utility/*` and `/api/ai/report` generated in local backend
+- enforce allowlist + rate controls at backend layer even for local installs
 
 ## Scripts
 
@@ -41,27 +101,6 @@ Vite will print a local URL (typically `http://localhost:8080`).
 - `npm run lint` - run ESLint
 - `npm run test` - run Vitest once
 - `npm run test:watch` - run Vitest in watch mode
-
-## App routes
-
-- `/` - landing page
-- `/workspace` - AI chat workspace (streaming response UI)
-- `/utility-builder` - template-driven utility generation
-- `/responsible-ai` - model report and safety metrics
-
-## Backend API expectation
-
-By default, the frontend calls:
-
-- Base URL: `http://localhost:8000/api`
-
-Expected endpoints:
-
-- `POST /chat` (streaming text response)
-- `POST /utility/generate` (returns generated utility output)
-- `GET /ai/report` (returns responsible AI metrics)
-
-If your backend runs elsewhere, update `API_BASE` in `src/lib/api.ts`.
 
 ## Tech stack
 
@@ -74,6 +113,6 @@ If your backend runs elsewhere, update `API_BASE` in `src/lib/api.ts`.
 
 ## Troubleshooting
 
-- If you see network errors in the UI, confirm the backend is running at `localhost:8000`.
+- If you see network errors in local mode, confirm backend is running at your configured local base URL.
+- If cloud mode fails, verify API key/model/base URL in `/runtime-settings`.
 - If port `8080` is busy, Vite may prompt for another port.
-- If styles or assets look stale, stop the dev server and rerun `npm run dev`.
