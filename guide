@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOCKER_COMPOSE_CMD=()
 
 C_RESET=$'\033[0m'
 C_BOLD=$'\033[1m'
@@ -38,6 +39,20 @@ spinner() {
     done
   done
   printf "\r%b %s\n" "${C_GREEN}${msg}${C_RESET}" "done"
+}
+
+resolve_compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD=(docker compose)
+    return 0
+  fi
+
+  if command -v docker-compose >/dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD=(docker-compose)
+    return 0
+  fi
+
+  return 1
 }
 
 show_overview() {
@@ -104,7 +119,11 @@ check_status() {
 
   if command -v docker >/dev/null 2>&1; then
     echo "${C_CYAN}Container snapshot:${C_RESET}"
-    docker compose -f "$ROOT_DIR/infra/docker-compose.runtime.yml" ps || true
+    if resolve_compose_cmd; then
+      "${DOCKER_COMPOSE_CMD[@]}" -f "$ROOT_DIR/infra/docker-compose.runtime.yml" ps || true
+    else
+      echo "${C_YELLOW}Docker Compose not found.${C_RESET}"
+    fi
     echo
   else
     echo "${C_YELLOW}Docker not found in PATH${C_RESET}"

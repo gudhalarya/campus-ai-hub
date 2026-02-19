@@ -6,6 +6,7 @@ RUNTIME_ENV="$ROOT_DIR/infra/runtime.env"
 COMPOSE_FILE="$ROOT_DIR/infra/docker-compose.runtime.yml"
 LOCAL_MODEL_SERVICE="local-model"
 LOCAL_MODEL_CONTAINER="campus-local-model"
+DOCKER_COMPOSE_CMD=()
 
 MODE="auto"
 START_STACK=1
@@ -41,6 +42,20 @@ done
 
 have_cmd() {
   command -v "$1" >/dev/null 2>&1
+}
+
+resolve_compose_cmd() {
+  if docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD=(docker compose)
+    return 0
+  fi
+
+  if have_cmd docker-compose; then
+    DOCKER_COMPOSE_CMD=(docker-compose)
+    return 0
+  fi
+
+  return 1
 }
 
 detect_cores() {
@@ -322,10 +337,16 @@ if ! docker info >/dev/null 2>&1; then
   exit 0
 fi
 
+if ! resolve_compose_cmd; then
+  echo "Docker Compose not found."
+  echo "Install Docker Compose v2 plugin or docker-compose and re-run setup."
+  exit 1
+fi
+
 if [[ "$RESOLVED_MODE" == "local" ]]; then
   echo ""
   echo "Starting local model container for auto model pull..."
-  docker compose -f "$COMPOSE_FILE" --profile local up -d "$LOCAL_MODEL_SERVICE"
+  "${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --profile local up -d "$LOCAL_MODEL_SERVICE"
 
   if wait_for_ollama; then
     SELECTED_MODEL=""
@@ -353,7 +374,7 @@ fi
 
 echo ""
 echo "Starting optimized container stack..."
-docker compose -f "$COMPOSE_FILE" --profile "$RESOLVED_MODE" up -d --build
+"${DOCKER_COMPOSE_CMD[@]}" -f "$COMPOSE_FILE" --profile "$RESOLVED_MODE" up -d --build
 
 echo ""
 echo "Stack started."
