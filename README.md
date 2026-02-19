@@ -127,7 +127,7 @@ Use this structure to ship a complete local sandbox package with optional cloud 
 campus-ai-hub/
   apps/
     web/                 # this frontend (Vite)
-    api/                 # local backend gateway
+    api-rust/            # Rust backend gateway (Actix Web)
   runtimes/
     local-model/         # Ollama/vLLM/llama.cpp container + model volumes
   infra/
@@ -136,7 +136,7 @@ campus-ai-hub/
     models/              # local model files
 ```
 
-Recommended local API behavior (`apps/api`):
+Recommended local API behavior (`apps/api-rust`):
 
 - `/api/chat` routes to local model runtime when mode is local
 - `/api/chat` routes to hosted provider when mode is cloud + API key

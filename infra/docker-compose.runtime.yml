@@ -11,12 +11,10 @@ services:
     restart: unless-stopped
 
   campus-api:
-    image: node:20-alpine
     container_name: campus-api
-    working_dir: /app
-    command: ["node", "server.js"]
-    volumes:
-      - ../apps/api:/app
+    build:
+      context: ..
+      dockerfile: Dockerfile.api
     env_file:
       - ./runtime.env
     ports:
