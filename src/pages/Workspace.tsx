@@ -14,6 +14,7 @@ function CodeBlock({ code, lang }: { code: string; lang: string }) {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
   return (
     <div className="rounded-lg border border-border bg-secondary overflow-hidden my-3 animate-scale-in">
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card">
@@ -43,6 +44,7 @@ function renderMarkdown(text: string) {
         </span>
       );
     }
+
     parts.push(<CodeBlock key={match.index} lang={match[1]} code={match[2]} />);
     lastIndex = match.index + match[0].length;
   }
@@ -73,35 +75,17 @@ function TypingIndicator() {
 }
 
 function EmptyState() {
-  const suggestions = [
-    "Explain quantum computing simply",
-    "Help me write a Python function",
-    "Summarize a research paper",
-    "Generate a study plan",
-  ];
-
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-6">
-      <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 animate-float">
-        <Sparkles className="w-8 h-8 text-primary" />
+    <div className="flex flex-col items-center justify-center h-full text-center px-4 sm:px-6">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-5 sm:mb-6 animate-float">
+        <Sparkles className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
       </div>
-      <h2 className="text-xl font-semibold mb-2 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
+      <h2 className="text-lg sm:text-xl font-semibold mb-2 opacity-0 animate-fade-in" style={{ animationDelay: "0.1s" }}>
         Campus AI Workspace
       </h2>
-      <p className="text-sm text-muted-foreground max-w-md mb-8 opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-        Start a conversation with the locally hosted AI model. Your data stays on-campus.
+      <p className="text-sm text-muted-foreground max-w-md opacity-0 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+        Start a conversation with your connected backend model.
       </p>
-      <div className="grid grid-cols-2 gap-2 max-w-sm w-full">
-        {suggestions.map((s, i) => (
-          <div
-            key={s}
-            className="text-xs text-muted-foreground border border-border rounded-lg px-3 py-2.5 hover:bg-secondary hover:text-foreground cursor-default transition-all duration-300 hover-scale opacity-0 animate-stagger-in"
-            style={{ animationDelay: `${0.3 + i * 0.08}s` }}
-          >
-            {s}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -153,13 +137,12 @@ export default function Workspace() {
   }, [input, isStreaming, messages]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
-      {/* Messages */}
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100vh-3.5rem)]">
       <div className="flex-1 overflow-y-auto scroll-smooth">
         {messages.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
+          <div className="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-6 space-y-3 sm:space-y-4">
             {messages.map((msg, i) => (
               <div
                 key={i}
@@ -167,7 +150,7 @@ export default function Workspace() {
                 style={{ animationDelay: "0.05s" }}
               >
                 <div
-                  className={`max-w-[85%] rounded-xl px-4 py-3 text-sm leading-relaxed transition-all duration-300 ${
+                  className={`max-w-[92%] sm:max-w-[85%] rounded-xl px-3.5 sm:px-4 py-2.5 sm:py-3 text-sm leading-relaxed transition-all duration-300 ${
                     msg.role === "user"
                       ? "bg-primary text-primary-foreground"
                       : "bg-card border border-border"
@@ -191,18 +174,16 @@ export default function Workspace() {
         )}
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="px-6 py-2 animate-slide-up">
+        <div className="px-3 sm:px-6 py-2 animate-slide-up">
           <div className="max-w-3xl mx-auto text-sm text-destructive bg-destructive/10 rounded-lg px-4 py-2 border border-destructive/20">
             {error}
           </div>
         </div>
       )}
 
-      {/* Input */}
-      <div className="border-t border-border bg-card/50 backdrop-blur-xl px-6 py-4">
-        <div className="max-w-3xl mx-auto flex items-end gap-3">
+      <div className="border-t border-border bg-card/50 backdrop-blur-xl px-3 sm:px-6 py-3 sm:py-4">
+        <div className="max-w-3xl mx-auto flex items-end gap-2 sm:gap-3">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -212,14 +193,14 @@ export default function Workspace() {
                 handleSend();
               }
             }}
-            placeholder="Ask anything..."
+            placeholder="Type your prompt..."
             rows={1}
-            className="flex-1 resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground"
+            className="flex-1 resize-none rounded-xl border border-border bg-background px-3 sm:px-4 py-2.5 sm:py-3 text-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 placeholder:text-muted-foreground"
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isStreaming}
-            className="p-3 rounded-xl bg-primary text-primary-foreground transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-40 disabled:shadow-none hover-scale"
+            className="p-2.5 sm:p-3 rounded-xl bg-primary text-primary-foreground transition-all duration-300 hover:opacity-90 hover:shadow-lg hover:shadow-primary/25 disabled:opacity-40 disabled:shadow-none hover-scale"
           >
             {isStreaming ? (
               <Loader2 className="w-4 h-4 animate-spin" />

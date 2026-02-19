@@ -4,11 +4,8 @@ import {
   MessageSquare,
   Wrench,
   Shield,
-  FileText,
-  Calendar,
   Bot,
   ChevronLeft,
-  ChevronRight,
   Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,45 +17,35 @@ const navItems = [
   { title: "Responsible AI", path: "/responsible-ai", icon: Shield },
 ];
 
-const workspaceTools = [
-  { title: "Resume Analyzer", path: "/workspace?tool=resume", icon: FileText },
-  { title: "Event Generator", path: "/workspace?tool=events", icon: Calendar },
-  { title: "Utility Builder", path: "/utility-builder", icon: Bot },
-  { title: "AI Report", path: "/responsible-ai", icon: Shield },
-];
-
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
 
-  const isActive = (path: string) => {
-    if (path.includes("?")) return location.pathname + location.search === path;
-    return location.pathname === path;
-  };
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <aside
       className={cn(
-        "h-screen sticky top-0 flex flex-col border-r border-border bg-card transition-all duration-300 ease-out",
+        "hidden md:flex h-screen sticky top-0 flex-col border-r border-border bg-card/80 backdrop-blur-xl transition-all duration-300 ease-out",
         collapsed ? "w-16" : "w-60"
       )}
     >
-      {/* Logo */}
       <div className="flex items-center gap-2 px-4 h-14 border-b border-border">
         <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-110">
           <Bot className="w-4 h-4 text-primary-foreground" />
         </div>
-        <span className={cn(
-          "font-semibold text-sm truncate transition-all duration-300",
-          collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
-        )}>
+        <span
+          className={cn(
+            "font-semibold text-sm truncate transition-all duration-300",
+            collapsed ? "opacity-0 w-0" : "opacity-100 w-auto"
+          )}
+        >
           Campus AI Node
         </span>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-1">
-        {navItems.map((item, i) => (
+        {navItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -69,59 +56,37 @@ export function AppSidebar() {
                 : "text-muted-foreground hover:bg-secondary hover:text-foreground"
             )}
           >
-            <item.icon className={cn(
-              "w-4 h-4 flex-shrink-0 transition-transform duration-200",
-              isActive(item.path) && "scale-110"
-            )} />
-            <span className={cn(
-              "transition-all duration-300",
-              collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
-            )}>
+            <item.icon
+              className={cn(
+                "w-4 h-4 flex-shrink-0 transition-transform duration-200",
+                isActive(item.path) && "scale-110"
+              )}
+            />
+            <span
+              className={cn(
+                "transition-all duration-300",
+                collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
+              )}
+            >
               {item.title}
             </span>
-            {/* Active indicator */}
             {isActive(item.path) && (
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full" />
             )}
           </Link>
         ))}
-
-        <div className={cn(
-          "transition-all duration-300 overflow-hidden",
-          collapsed ? "max-h-0 opacity-0" : "max-h-96 opacity-100"
-        )}>
-          <div className="pt-4 pb-1 px-3">
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Tools
-            </span>
-          </div>
-          {workspaceTools.map((item) => (
-            <Link
-              key={item.title}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-all duration-200",
-                isActive(item.path)
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              )}
-            >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              <span>{item.title}</span>
-            </Link>
-          ))}
-        </div>
       </nav>
 
-      {/* Collapse toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="flex items-center justify-center h-10 border-t border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
       >
-        <ChevronLeft className={cn(
-          "w-4 h-4 transition-transform duration-300",
-          collapsed && "rotate-180"
-        )} />
+        <ChevronLeft
+          className={cn(
+            "w-4 h-4 transition-transform duration-300",
+            collapsed && "rotate-180"
+          )}
+        />
       </button>
     </aside>
   );
