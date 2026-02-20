@@ -45,6 +45,76 @@ have_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
+detect_os_id() {
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    source /etc/os-release
+    echo "${ID:-unknown}"
+    return
+  fi
+
+  echo "unknown"
+}
+
+print_docker_install_help() {
+  local os_id="$1"
+  echo "Docker/Podman is not installed."
+  echo "You can install Docker with these commands:"
+  echo
+
+  case "$os_id" in
+    arch)
+      echo "  sudo pacman -S --needed docker docker-compose"
+      ;;
+    ubuntu|debian)
+      echo "  sudo apt-get update"
+      echo "  sudo apt-get install -y docker.io docker-compose-plugin"
+      ;;
+    fedora)
+      echo "  sudo dnf install -y docker docker-compose-plugin"
+      ;;
+    *)
+      echo "  Install Docker Desktop / Docker Engine for your OS"
+      echo "  https://docs.docker.com/engine/install/"
+      ;;
+  esac
+
+  echo "  sudo systemctl enable --now docker"
+  echo "  sudo usermod -aG docker \$USER"
+  echo "  newgrp docker"
+  echo
+}
+
+install_docker_for_os() {
+  local os_id="$1"
+
+  if ! have_cmd sudo; then
+    echo "sudo is required for automatic Docker install."
+    return 1
+  fi
+
+  case "$os_id" in
+    arch)
+      sudo pacman -S --needed docker docker-compose
+      ;;
+    ubuntu|debian)
+      sudo apt-get update
+      sudo apt-get install -y docker.io docker-compose-plugin
+      ;;
+    fedora)
+      sudo dnf install -y docker docker-compose-plugin
+      ;;
+    *)
+      echo "Automatic Docker install is not supported for OS: $os_id"
+      return 1
+      ;;
+  esac
+
+  sudo systemctl enable --now docker
+  sudo usermod -aG docker "$USER" || true
+  return 0
+}
+
 resolve_container_engine() {
   if have_cmd docker; then
     CONTAINER_ENGINE_CMD=(docker)
@@ -396,12 +466,28 @@ if (( START_STACK == 0 )); then
 fi
 
 if ! resolve_container_engine; then
-  echo "Container engine not found (Docker/Podman)."
-  echo "Setup completed in config-only mode."
-  echo "Generated: $RUNTIME_ENV"
-  echo "When ready, install Docker or Podman and run:"
-  echo "  ./setup --$RESOLVED_MODE"
-  exit 0
+  OS_ID="$(detect_os_id)"
+  print_docker_install_help "$OS_ID"
+
+  if [[ -t 0 ]]; then
+    read -r -p "Install Docker automatically now? [y/N]: " install_now
+    if [[ "$install_now" =~ ^[Yy]$ ]]; then
+      if install_docker_for_os "$OS_ID"; then
+        echo "Docker install/setup completed."
+        echo "Trying to continue setup..."
+      else
+        echo "Automatic install failed or unsupported."
+      fi
+    fi
+  fi
+
+  if ! resolve_container_engine; then
+    echo "Setup completed in config-only mode."
+    echo "Generated: $RUNTIME_ENV"
+    echo "After Docker install, run:"
+    echo "  ./setup --$RESOLVED_MODE"
+    exit 0
+  fi
 fi
 
 ENGINE_ERR_FILE="$(mktemp)"
