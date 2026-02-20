@@ -18,6 +18,9 @@ It ships with a polished frontend, a Rust (`actix-web`) backend, and local model
 campus-ai-hub/
   apps/
     api-rust/                # Rust backend (Actix Web)
+  scripts/
+    setup.sh                 # core setup logic
+    guide.sh                 # interactive terminal guide
   infra/
     docker-compose.runtime.yml
     nginx.conf
@@ -25,7 +28,8 @@ campus-ai-hub/
   data/
     models/                  # local Ollama model storage
   src/                       # frontend
-  setup                      # machine-aware setup script
+  setup                      # wrapper -> scripts/setup.sh
+  guide                      # wrapper -> scripts/guide.sh
 ```
 
 ## Quick Start (Recommended)
