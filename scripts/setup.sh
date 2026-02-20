@@ -7,6 +7,7 @@ COMPOSE_FILE="$ROOT_DIR/infra/docker-compose.runtime.yml"
 LOCAL_MODEL_SERVICE="local-model"
 LOCAL_MODEL_CONTAINER="campus-local-model"
 DOCKER_COMPOSE_CMD=()
+CONTAINER_ENGINE_CMD=()
 
 MODE="auto"
 START_STACK=1
@@ -44,15 +45,84 @@ have_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
-resolve_compose_cmd() {
-  if docker compose version >/dev/null 2>&1; then
-    DOCKER_COMPOSE_CMD=(docker compose)
+resolve_container_engine() {
+  if have_cmd docker; then
+    CONTAINER_ENGINE_CMD=(docker)
     return 0
   fi
 
-  if have_cmd docker-compose; then
-    DOCKER_COMPOSE_CMD=(docker-compose)
+  if have_cmd podman; then
+    CONTAINER_ENGINE_CMD=(podman)
     return 0
+  fi
+
+  return 1
+}
+
+try_enable_sudo_engine_if_needed() {
+  local err_msg="$1"
+
+  if [[ "${CONTAINER_ENGINE_CMD[0]:-}" != "docker" ]]; then
+    return 1
+  fi
+
+  if [[ "$err_msg" != *"permission denied while trying to connect to the docker API"* ]]; then
+    return 1
+  fi
+
+  if ! have_cmd sudo; then
+    return 1
+  fi
+
+  if sudo -n docker info >/dev/null 2>&1; then
+    CONTAINER_ENGINE_CMD=(sudo docker)
+    return 0
+  fi
+
+  # Interactive fallback: ask once for sudo credential and continue.
+  if [[ -t 0 ]] && sudo -v >/dev/null 2>&1; then
+    if sudo docker info >/dev/null 2>&1; then
+      CONTAINER_ENGINE_CMD=(sudo docker)
+      return 0
+    fi
+  fi
+
+  return 1
+}
+
+resolve_compose_cmd() {
+  if [[ "${CONTAINER_ENGINE_CMD[0]:-}" == "docker" || "${CONTAINER_ENGINE_CMD[1]:-}" == "docker" ]]; then
+    if "${CONTAINER_ENGINE_CMD[@]}" compose version >/dev/null 2>&1; then
+      DOCKER_COMPOSE_CMD=("${CONTAINER_ENGINE_CMD[@]}" compose)
+      return 0
+    fi
+
+    if have_cmd docker-compose; then
+      if [[ "${CONTAINER_ENGINE_CMD[0]:-}" == "sudo" ]]; then
+        DOCKER_COMPOSE_CMD=(sudo docker-compose)
+      else
+        DOCKER_COMPOSE_CMD=(docker-compose)
+      fi
+      if "${DOCKER_COMPOSE_CMD[@]}" version >/dev/null 2>&1; then
+        return 0
+      fi
+    fi
+
+    return 1
+  fi
+
+  if [[ "${CONTAINER_ENGINE_CMD[0]:-}" == "podman" ]]; then
+    if podman compose version >/dev/null 2>&1; then
+      DOCKER_COMPOSE_CMD=(podman compose)
+      return 0
+    fi
+
+    if have_cmd podman-compose; then
+      DOCKER_COMPOSE_CMD=(podman-compose)
+      return 0
+    fi
+
+    return 1
   fi
 
   return 1
@@ -207,7 +277,7 @@ wait_for_ollama() {
   local try=1
 
   while (( try <= max_tries )); do
-    if docker exec "$LOCAL_MODEL_CONTAINER" ollama list >/dev/null 2>&1; then
+    if "${CONTAINER_ENGINE_CMD[@]}" exec "$LOCAL_MODEL_CONTAINER" ollama list >/dev/null 2>&1; then
       return 0
     fi
 
@@ -223,7 +293,7 @@ pull_best_local_model() {
 
   for model in $candidates; do
     echo "Trying local model: $model"
-    if docker exec "$LOCAL_MODEL_CONTAINER" ollama pull "$model"; then
+    if "${CONTAINER_ENGINE_CMD[@]}" exec "$LOCAL_MODEL_CONTAINER" ollama pull "$model"; then
       echo "$model"
       return 0
     fi
@@ -245,7 +315,7 @@ pull_model_pack() {
     fi
 
     echo "Trying local model: $model"
-    if docker exec "$LOCAL_MODEL_CONTAINER" ollama pull "$model"; then
+    if "${CONTAINER_ENGINE_CMD[@]}" exec "$LOCAL_MODEL_CONTAINER" ollama pull "$model"; then
       pulled+=("$model")
       count=$((count + 1))
       echo "Pulled model: $model"
@@ -325,22 +395,67 @@ if (( START_STACK == 0 )); then
   exit 0
 fi
 
-if ! have_cmd docker; then
-  echo "Docker not found. Install Docker and run:"
-  echo "  docker compose -f infra/docker-compose.runtime.yml --profile $RESOLVED_MODE up -d --build"
+if ! resolve_container_engine; then
+  echo "Container engine not found (Docker/Podman)."
+  echo "Setup completed in config-only mode."
+  echo "Generated: $RUNTIME_ENV"
+  echo "When ready, install Docker or Podman and run:"
+  echo "  ./setup --$RESOLVED_MODE"
   exit 0
 fi
 
-if ! docker info >/dev/null 2>&1; then
-  echo "Docker daemon is not available. Start Docker and then run:"
-  echo "  docker compose -f infra/docker-compose.runtime.yml --profile $RESOLVED_MODE up -d --build"
-  exit 0
+ENGINE_ERR_FILE="$(mktemp)"
+if ! "${CONTAINER_ENGINE_CMD[@]}" info > /dev/null 2> "$ENGINE_ERR_FILE"; then
+  ENGINE_ERR_MSG="$(cat "$ENGINE_ERR_FILE" || true)"
+  if try_enable_sudo_engine_if_needed "$ENGINE_ERR_MSG"; then
+    rm -f "$ENGINE_ERR_FILE"
+    ENGINE_ERR_FILE="$(mktemp)"
+    if "${CONTAINER_ENGINE_CMD[@]}" info > /dev/null 2> "$ENGINE_ERR_FILE"; then
+      rm -f "$ENGINE_ERR_FILE"
+    else
+      ENGINE_ERR_MSG="$(cat "$ENGINE_ERR_FILE" || true)"
+      rm -f "$ENGINE_ERR_FILE"
+      echo "Docker is installed but daemon is not reachable from this shell."
+      echo "Setup completed in config-only mode."
+      if [[ -n "$ENGINE_ERR_MSG" ]]; then
+        echo "Details:"
+        echo "  $ENGINE_ERR_MSG"
+      fi
+      echo "Fix:"
+      echo "  sudo systemctl enable --now docker"
+      echo "  newgrp docker"
+      echo "Then run:"
+      echo "  ./setup --$RESOLVED_MODE"
+      exit 0
+    fi
+  else
+    rm -f "$ENGINE_ERR_FILE"
+
+    echo "${CONTAINER_ENGINE_CMD[0]^} is installed but daemon is not reachable from this shell."
+    echo "Setup completed in config-only mode."
+    if [[ -n "$ENGINE_ERR_MSG" ]]; then
+      echo "Details:"
+      echo "  $ENGINE_ERR_MSG"
+    fi
+    echo "Fix:"
+    echo "  sudo systemctl enable --now docker"
+    echo "  newgrp docker"
+    echo "Then run:"
+    echo "  ./setup --$RESOLVED_MODE"
+    exit 0
+  fi
 fi
+rm -f "$ENGINE_ERR_FILE"
 
 if ! resolve_compose_cmd; then
-  echo "Docker Compose not found."
-  echo "Install Docker Compose v2 plugin or docker-compose and re-run setup."
-  exit 1
+  echo "Compose command not found for ${CONTAINER_ENGINE_CMD[0]}."
+  echo "Setup completed in config-only mode."
+  if [[ "${CONTAINER_ENGINE_CMD[0]}" == "docker" ]]; then
+    echo "Install Docker Compose plugin (docker compose) or docker-compose."
+  else
+    echo "Install podman-compose or podman compose plugin."
+  fi
+  exit 0
 fi
 
 if [[ "$RESOLVED_MODE" == "local" ]]; then
